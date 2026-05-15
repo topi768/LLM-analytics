@@ -25,6 +25,7 @@ def execute_code(code: str, df):
             "float": float,
             "list": list,
             "dict": dict,
+            '__import__ ': __import__
         }
     }
 

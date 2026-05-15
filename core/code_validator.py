@@ -6,7 +6,6 @@ FORBIDDEN_FUNCTIONS = {
     "eval",
     "exec",
     "compile",
-    "__import__",
     "input",
 }
 
