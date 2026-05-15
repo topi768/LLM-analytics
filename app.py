@@ -7,13 +7,13 @@ from utils.file_loader import load_data
 st.set_page_config(page_title="LLM Data Analyst", layout="wide")
 
 st.title("LLM Data Analyst")
-st.write("Приложение для анализа данных с LLM-агентом.")
+st.write("Анализа данных с LLM-агентом.")
 
-uploaded_file = st.file_uploader("Загрузите CSV или Excel файл", type=["csv", "xlsx", "xls"])
+uploaded_file = st.file_uploader("Загрузите CSV ", type=["csv", "xlsx", "xls"])
 
 user_instruction = st.text_area(
     "Инструкция для анализа",
-    placeholder="Например: найди аномалии, покажи основные метрики, проверь выбросы"
+    placeholder="Например: найти корреляции, основные метрики, проверь выбросы"
 )
 
 if uploaded_file is not None:
@@ -22,22 +22,34 @@ if uploaded_file is not None:
         st.success(f"Файл загружен: {uploaded_file.name}")
 
         st.subheader("Предпросмотр данных")
-        st.dataframe(df.head(10), use_container_width=True)
+        st.dataframe(df.head(5), use_container_width=True)
 
         st.subheader("Основная информация")
         col1, col2, col3 = st.columns(3)
         col1.metric("Строки", df.shape[0])
         col2.metric("Столбцы", df.shape[1])
-        col3.metric("Пропущенные значения", int(df.isna().sum().sum()))
 
-        with st.expander("Названия столбцов"):
-            st.write(list(df.columns))
+        missing_percent = (
+                df.isna().sum().sum()
+                / (df.shape[0] * df.shape[1])
+                * 100
+        )
+
+        missing_percent = round(missing_percent, 2)
+
+        col3.metric(
+            "Пропущенные значения",
+            f"{missing_percent}%"
+        )
+        #
+        # with st.expander("Названия столбцов"):
+        #     st.write(list(df.columns))
 
     except Exception as e:
         st.error(f"Ошибка при чтении файла: {e}")
 
-if user_instruction:
-    st.info("Инструкция получена.")
+# if user_instruction:
+#     st.info("Инструкция получена.")
 
 if st.button("Запустить AI-агента"):
 
@@ -49,9 +61,7 @@ if st.button("Запустить AI-агента"):
 
     result = output["result"]
 
-    # =========================
-    # ОШИБКА ВЫПОЛНЕНИЯ
-    # =========================
+
     if result.get("error"):
         st.error("Ошибка выполнения кода")
         st.code(result["error"])
@@ -59,9 +69,6 @@ if st.button("Запустить AI-агента"):
 
     st.success("Код выполнен успешно")
 
-    # =========================
-    # TEXT OUTPUT
-    # =========================
     if result["result"]["text"]:
         st.subheader("Результат анализа")
         st.write(result["result"]["text"])

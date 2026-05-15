@@ -2,9 +2,7 @@ import pandas as pd
 
 
 def load_data(uploaded_file):
-    """
-    Загружает CSV или Excel файл и возвращает pandas.DataFrame.
-    """
+
     file_name = uploaded_file.name.lower()
 
     if file_name.endswith(".csv"):

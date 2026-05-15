@@ -13,7 +13,6 @@ def ask_llm(messages, model=None, temperature=0.2):
     if not api_key:
         raise ValueError("Не найден OPENROUTER_API_KEY в .env")
 
-    # ✔ правильный fallback модели
     model = model or os.getenv("OPENROUTER_MODEL", "z-ai/glm-4.5-air:free")
 
     payload = {
