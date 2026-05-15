@@ -66,9 +66,7 @@ if st.button("Запустить AI-агента"):
         st.subheader("Результат анализа")
         st.write(result["result"]["text"])
 
-    # =========================
-    # TABLE OUTPUT
-    # =========================
+
     if result["result"]["table"] is not None:
         st.subheader("Таблица результата")
 
@@ -76,9 +74,7 @@ if st.button("Запустить AI-агента"):
         table_df = pd.DataFrame(result["result"]["table"])
         st.dataframe(table_df)
 
-    # =========================
-    # CHART OUTPUT (Plotly)
-    # =========================
+
     if result["result"]["chart"] is not None:
         st.subheader("График")
 
