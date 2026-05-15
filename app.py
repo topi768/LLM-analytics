@@ -39,7 +39,6 @@ if uploaded_file is not None:
 if user_instruction:
     st.info("Инструкция получена.")
 
-
 if st.button("Запустить AI-агента"):
 
     with st.spinner("Агент анализирует данные..."):
@@ -50,25 +49,56 @@ if st.button("Запустить AI-агента"):
 
     result = output["result"]
 
-    if result["ok"]:
-        st.success("Код выполнен успешно")
-    else:
-        st.error("Ошибка выполнения")
+    # =========================
+    # ОШИБКА ВЫПОЛНЕНИЯ
+    # =========================
+    if result.get("error"):
+        st.error("Ошибка выполнения кода")
         st.code(result["error"])
+        st.stop()
 
-    if result["stdout"]:
-        st.subheader("Вывод")
-        st.text(result["stdout"])
+    st.success("Код выполнен успешно")
 
-    if result["result_text"]:
-        st.subheader("Итог от кода")
-        st.write(result["result_text"])
+    # =========================
+    # TEXT OUTPUT
+    # =========================
+    if result["result"]["text"]:
+        st.subheader("Результат анализа")
+        st.write(result["result"]["text"])
 
-    if result["result_df"] is not None:
+    # =========================
+    # TABLE OUTPUT
+    # =========================
+    if result["result"]["table"] is not None:
         st.subheader("Таблица результата")
-        st.dataframe(result["result_df"])
 
-    if result["matplotlib_figures"]:
-        st.subheader("Графики")
-        for fig in result["matplotlib_figures"]:
-            st.pyplot(fig)
+        import pandas as pd
+        table_df = pd.DataFrame(result["result"]["table"])
+        st.dataframe(table_df)
+
+    # =========================
+    # CHART OUTPUT (Plotly)
+    # =========================
+    if result["result"]["chart"] is not None:
+        st.subheader("График")
+
+        import plotly.express as px
+        import pandas as pd
+
+        chart = result["result"]["chart"]
+        df_chart = pd.DataFrame(chart["data"])
+
+        chart_type = chart.get("type", "line")
+
+        if chart_type == "line":
+            fig = px.line(df_chart, x=chart["x"], y=chart["y"])
+        elif chart_type == "bar":
+            fig = px.bar(df_chart, x=chart["x"], y=chart["y"])
+        elif chart_type == "scatter":
+            fig = px.scatter(df_chart, x=chart["x"], y=chart["y"])
+        else:
+            st.warning("Неизвестный тип графика")
+            fig = None
+
+        if fig:
+            st.plotly_chart(fig, use_container_width=True)

@@ -3,50 +3,73 @@ from core.llm_client import ask_llm
 from core.executor import execute_code
 from core.code_parser import extract_python_code
 
-def run_agent(df, user_instruction):
-    """
-    Один полный цикл агента:
-    LLM → код → выполнение → результат
-    """
 
-    # 1. готовим описание датасета
+def run_agent(df, user_instruction, max_retries=2):
+
+
     dataset_summary = build_dataset_summary(df)
 
-    # 2. просим LLM написать код
+    system_prompt = """
+Ты — генератор Python-кода для анализа pandas DataFrame (df).
+
+ТВОЯ ЗАДАЧА:
+Сгенерировать код, который анализирует df и формирует результат строго в формате переменной result.
+
+ФОРМАТ result (ОБЯЗАТЕЛЬНО):
+result = {
+    "text": str | None,
+    "table": list[dict] | None,
+    "chart": {chart_type: chart_type, x: x, y: y} | None
+    
+}
+
+ПРАВИЛА:
+
+1. Выводи ТОЛЬКО Python-код.
+2. Не добавляй объяснений, текста, комментариев вне кода.
+3. Используй только pandas (pd) и df.
+4. Если текст не нужен → text = None
+5. Если таблица не нужна → table = None
+6. Если график не нужен → chart = None
+7. График НЕ рисуй через matplotlib.
+   Только возвращай данные в chart.
+
+ФОРМАТ chart:
+{
+    "type": "line" | "bar" | "scatter",
+    "x": "название_колонки_1",
+    "y": "название_колонки_2",
+    "data": list[dict] # ВАЖНО: Ключи в словарях должны быть названиями колонок (название_колонки_1 и название_колонки_2), а не буквами 'x' и 'y'.
+}
+Для генерации data используй: df[[x_col, y_col]].to_dict(orient="records")
+
+"""
+
+    user_prompt = f"""
+Датасет (df.head()):
+{dataset_summary}
+
+Инструкция пользователя:
+{user_instruction}
+
+Сгенерируй Python-код, который создаёт переменную result.
+"""
+
     messages = [
-        {
-            "role": "system",
-            "content": (
-                "Ты — узкоспециализированный генератор Python-кода для pandas. "
-                "Твоя задача: прочитать описание df и выдать код, решающий задачу. "
-                "\n\nПРАВИЛА:\n"
-                "1. Выдавай ТОЛЬКО чистый Python-код.\n"
-                "2. Никаких пояснений, вступлений и комментариев 'Сгенерированный код'.\n"
-                "3. Весь код должен быть обернут в один блок ```python ... ```.\n"
-                "4. Результат обязательно сохрани в переменную result_text (строка) или result_df (DataFrame)."
-                "5. Если нужен график, используй matplotlib.pyplot (импортирован как plt). "
-                "6. ОБЯЗАТЕЛЬНО сохраняй график через plt.savefig('temp_plot.png'). "
-                "7. Всегда делай plt.close() после сохранения, чтобы не забивать память."
-            )
-        },
-        {
-            "role": "user",
-            "content": f"""
-    Датасет (df.head()):
-    {dataset_summary}
-
-    Инструкция: {user_instruction}
-
-    Напиши код. Используй только библиотеку pandas (уже импортирована как pd) и переменную df.
-    """
-        }
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt}
     ]
+    last_error = None
+    code = None
 
+    # 3. LLM → код
     raw_response = ask_llm(messages)
     code = extract_python_code(raw_response)
-    # 3. выполняем код
+
+    # 4. выполнение кода
     result = execute_code(code, df)
 
+    # 5. единый контракт ответа
     return {
         "code": code,
         "result": result
