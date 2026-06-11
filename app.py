@@ -3,6 +3,8 @@ import pandas as pd
 from core.dataset_summary import build_dataset_summary
 from core.agent import run_agent
 from utils.file_loader import load_data
+import plotly.express as px
+import pandas as pd
 
 st.set_page_config(page_title="LLM Data Analyst", layout="wide")
 
@@ -84,7 +86,6 @@ if st.button("Запустить AI-агента"):
     table = result_block.get("table")
     if table is not None:
         st.subheader("Таблица результата")
-        import pandas as pd
         table_df = pd.DataFrame(table)
         st.dataframe(table_df)
 
@@ -93,8 +94,7 @@ if st.button("Запустить AI-агента"):
     if chart is not None:
         st.subheader("График")
 
-        import plotly.express as px
-        import pandas as pd
+
 
         df_chart = pd.DataFrame(chart["data"])
         chart_type = chart.get("type", "line")
