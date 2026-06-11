@@ -19,13 +19,21 @@ def execute_code(code: str, df):
             "min": min,
             "max": max,
             "sum": sum,
-            "print": print,
+            "abs": abs,
+            "round": round,
+            "sorted": sorted,
+            "enumerate": enumerate,
+            "zip": zip,
+            "set": set,
+            "tuple": tuple,
+            "list": list,
+            "dict": dict,
             "str": str,
             "int": int,
             "float": float,
-            "list": list,
-            "dict": dict,
-            '__import__ ': __import__
+            "bool": bool,
+            "print": print,
+            '__import__': __import__
         }
     }
 

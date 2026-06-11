@@ -50,47 +50,53 @@ if uploaded_file is not None:
 
 # if user_instruction:
 #     st.info("Инструкция получена.")
-
 if st.button("Запустить AI-агента"):
 
     with st.spinner("Агент анализирует данные..."):
         output = run_agent(df, user_instruction)
 
-    st.subheader("Сгенерированный код")
-    st.code(output["code"], language="python")
+    # Показать историю кода, если она есть
+    if output.get("history"):
+        st.subheader("История агента")
+        for step in output["history"]:
+            st.markdown(f"**Шаг {step['step']}**")
+            st.code(step["code"], language="python")
 
-    result = output["result"]
+    # Достаем внутренний результат выполнения
+    result_block = output.get("result", {}).get("result", {})
 
-
-    if result.get("error"):
+    # Ошибка выполнения кода
+    exec_error = output.get("result", {}).get("error")
+    if exec_error:
         st.error("Ошибка выполнения кода")
-        st.code(result["error"])
+        st.code(exec_error)
         st.stop()
 
     st.success("Код выполнен успешно")
 
-    if result["result"]["text"]:
+    # Текстовый вывод
+    text = result_block.get("text") or output.get("final_text")
+    if text:
         st.subheader("Результат анализа")
-        st.write(result["result"]["text"])
+        st.write(text)
 
-
-    if result["result"]["table"] is not None:
+    # Таблица
+    table = result_block.get("table")
+    if table is not None:
         st.subheader("Таблица результата")
-
         import pandas as pd
-        table_df = pd.DataFrame(result["result"]["table"])
+        table_df = pd.DataFrame(table)
         st.dataframe(table_df)
 
-
-    if result["result"]["chart"] is not None:
+    # График
+    chart = result_block.get("chart")
+    if chart is not None:
         st.subheader("График")
 
         import plotly.express as px
         import pandas as pd
 
-        chart = result["result"]["chart"]
         df_chart = pd.DataFrame(chart["data"])
-
         chart_type = chart.get("type", "line")
 
         if chart_type == "line":
@@ -103,5 +109,5 @@ if st.button("Запустить AI-агента"):
             st.warning("Неизвестный тип графика")
             fig = None
 
-        if fig:
+        if fig is not None:
             st.plotly_chart(fig, use_container_width=True)

@@ -4,16 +4,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-
-
 def ask_llm(messages, model=None, temperature=0.2):
 
-    api_key = os.getenv("OPENROUTER_API_KEY")
+    api_key = os.getenv("OPENROUTER_API_CHAT_GPT")
     if not api_key:
         raise ValueError("Не найден OPENROUTER_API_KEY в .env")
 
-    model = model or os.getenv("OPENROUTER_MODEL", "z-ai/glm-4.5-air:free")
+    # model = model or os.getenv("OPENROUTER_MODEL", "z-ai/glm-4.5-air:free")
+    model = model or os.getenv("OPENROUTER_MODEL", "openai/gpt-oss-120b:free")
 
     payload = {
         "model": model,
