@@ -7,7 +7,7 @@ from core.code_parser import extract_python_code
 from core.code_validator import validate_code
 
 
-def _safe_json_loads(text: str) -> dict:
+def safe_json_loads(text: str) -> dict:
 
     start = text.find("{")
     end = text.rfind("}")
@@ -37,7 +37,7 @@ def format_history(history: list[dict]) -> str:
     )
 
 
-def _build_code_prompt(dataset_summary: str, user_instruction: str, history: list[dict]) -> list[dict]:
+def build_code_prompt(dataset_summary: str, user_instruction: str, history: list[dict]) -> list[dict]:
     system_prompt = """
         Ты — генератор Python-кода для анализа pandas DataFrame (df).
         
@@ -182,7 +182,7 @@ def run_agent(df, user_instruction, max_steps=3):
     final_text = None
 
     for step in range(max_steps):
-        code_messages = _build_code_prompt(dataset_summary, current_instruction, history)
+        code_messages = build_code_prompt(dataset_summary, current_instruction, history)
         raw_response = ask_llm(code_messages)
 
         code = extract_python_code(raw_response)
@@ -208,7 +208,7 @@ def run_agent(df, user_instruction, max_steps=3):
         decision_raw = ask_llm(decision_messages)
 
         try:
-            decision = _safe_json_loads(decision_raw)
+            decision = safe_json_loads(decision_raw)
         except Exception:
             decision = {
                 "action": "finish",
